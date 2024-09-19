@@ -1,8 +1,8 @@
 #!/bin/sh
 
-rank=64
-alpha=128
-gpuid=0
+rank=32
+alpha=64
+gpuid=3
 
 model_p_or_n=yahma/llama-7b-hf
 
@@ -35,7 +35,7 @@ CUDA_VISIBLE_DEVICES=$gpuid python -u finetune.py \
 for ds in ARC-Easy openbookqa social_i_qa ARC-Challenge winogrande piqa boolq hellaswag
 do
   CUDA_VISIBLE_DEVICES=$gpuid python -u commonsense_evaluate.py \
-    --model LLaMA \
+    --model LLaMA-7B \
     --adapter LoRA \
     --dataset $ds \
     --batch_size 1 \

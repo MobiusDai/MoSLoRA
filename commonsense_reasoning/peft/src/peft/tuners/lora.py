@@ -322,9 +322,9 @@ class Linear(nn.Linear, LoraLayer):
             self.lora_A = nn.Linear(in_features, r, bias=False)
             if self.lora_router:
                 if self.lora_router_mixer:
-                    self.lora_R = nn.Linear(r, r**2, bias=False)
+                    self.lora_R = nn.Linear(in_features, r**2, bias=False)
                 else:
-                    self.lora_R = nn.Linear(r, r, bias=False)
+                    self.lora_R = nn.Linear(in_features, r, bias=False)
             self.lora_B = nn.Linear(r, out_features, bias=False)
             self.scaling = self.lora_alpha / self.r
             # Freezing the pre-trained weight matrix
@@ -384,7 +384,7 @@ class Linear(nn.Linear, LoraLayer):
         
         dropout_x = self.lora_dropout(x.to(self.lora_A.weight.dtype))
         left_result = self.forward_A(dropout_x)
-        router_weight = self.lora_R(left_result)
+        router_weight = self.lora_R(dropout_x)
         if self.lora_router:
             router_weight = torch.softmax(router_weight, dim=-1)
 

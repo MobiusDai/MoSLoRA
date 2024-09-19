@@ -1,7 +1,7 @@
 #!/bin/sh
 
-rank=64
-alpha=128
+rank=4
+alpha=8
 gpuid=0
 
 model_p_or_n=yahma/llama-7b-hf
