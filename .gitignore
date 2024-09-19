@@ -35,3 +35,6 @@ data/llava_data*
 data
 
 work_dirs/
+
+
+__pycache__/
