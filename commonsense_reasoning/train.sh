@@ -1,13 +1,14 @@
 #!/bin/sh
 
-rank=32
-alpha=64
-gpuid=3
+rank=8
+alpha=16
+gpuid=0
+micro_batch_size=4
 
 model_p_or_n=yahma/llama-7b-hf
 
-model_path=trained_models/mlora-r$rank-a$alpha-3e4
-results_path=results/mlora-r$rank-a$alpha-3e4
+model_path=trained_models/mlora-r$rank-a$alpha-3e4-h4
+results_path=results/mlora-r$rank-a$alpha-3e4-h4
 
 mkdir -p $model_path
 mkdir -p $results_path
@@ -20,7 +21,7 @@ CUDA_VISIBLE_DEVICES=$gpuid python -u finetune.py \
   --data_path 'ft_training_set/commonsense_170k.json' \
   --output_dir $model_path \
   --batch_size 16 \
-  --micro_batch_size 2 \
+  --micro_batch_size $micro_batch_size \
   --num_epochs 3 \
   --learning_rate 3e-4 \
   --cutoff_len 256 \

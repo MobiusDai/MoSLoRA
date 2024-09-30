@@ -24,8 +24,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers.pytorch_utils import Conv1D
-import sys 
+
+####################  debug  ####################
+# import sys 
+# sys.path.append('peft/src/peft/')
+# from utils import PeftConfig, PeftType, transpose
+####################  debug  ####################
+
 from ..utils import PeftConfig, PeftType, transpose
+from einops import rearrange
 
 
 def is_bnb_available():
@@ -319,13 +326,16 @@ class Linear(nn.Linear, LoraLayer):
         if r > 0:
             # self.lora_A = nn.ModuleList([nn.Linear(in_features, r, bias=False) for _ in range(expert_A)])
             # self.lora_B = nn.ModuleList([nn.Linear(r, out_features, bias=False) for _ in range(expert_B)])
-            self.lora_A = nn.Linear(in_features, r, bias=False)
+            
+            # we set hyper-parameter here: lora_head = 4
+            lora_head = 4
+            self.lora_A = nn.Linear(in_features//lora_head, r, bias=False)
             if self.lora_router:
                 if self.lora_router_mixer:
-                    self.lora_R = nn.Linear(in_features, r**2, bias=False)
+                    self.lora_R = nn.Linear(in_features//lora_head, r**2, bias=False)
                 else:
-                    self.lora_R = nn.Linear(in_features, r, bias=False)
-            self.lora_B = nn.Linear(r, out_features, bias=False)
+                    self.lora_R = nn.Linear(in_features//lora_head, r, bias=False)
+            self.lora_B = nn.Linear(r, out_features//lora_head, bias=False)
             self.scaling = self.lora_alpha / self.r
             # Freezing the pre-trained weight matrix
             self.weight.requires_grad = False
@@ -383,6 +393,14 @@ class Linear(nn.Linear, LoraLayer):
             raise NotImplementedError("Disabling adapters is not supported for LoraLayer yet")
         
         dropout_x = self.lora_dropout(x.to(self.lora_A.weight.dtype))
+        # we set hyper-parameter here: lora_head = 4
+        lora_head = 4
+        dropout_x_shape = dropout_x.shape 
+        if len(dropout_x_shape) == 3:
+            dropout_x = rearrange(dropout_x, 'b s (h d) -> (b h) s d', h=lora_head)
+        else:
+            dropout_x = rearrange(dropout_x, 'b (h d) -> (b h) d', h=lora_head)
+
         left_result = self.forward_A(dropout_x)
         router_weight = self.lora_R(dropout_x)
         if self.lora_router:
@@ -400,8 +418,13 @@ class Linear(nn.Linear, LoraLayer):
             moe_result = torch.einsum('bnr, bnrk->bnk', left_result, router_weight)
 
         lora_result = self.forward_B(moe_result) * self.scaling
+        
+        if len(dropout_x_shape) == 3:
+            lora_result = rearrange(lora_result, '(b h) s d -> b s (h d)', h=lora_head)
+        else:
+            lora_result = rearrange(lora_result, '(b h) d -> b (h d)', h=lora_head)
+            
         org_result = F.linear(x, transpose(self.weight, self.fan_in_fan_out), bias=self.bias)
-
         result = lora_result + org_result
 
         if result.dtype != previous_dtype:
@@ -471,3 +494,4 @@ if __name__ == '__main__':
 
     input_tensor = torch.randn(4, 16, 768)
     output_tensor = lora_linear(input_tensor)
+    print(output_tensor.shape)
