@@ -392,7 +392,7 @@ class Linear(nn.Linear, LoraLayer):
         if self.disable_adapters:
             raise NotImplementedError("Disabling adapters is not supported for LoraLayer yet")
         
-        dropout_x = self.lora_dropout(x.to(self.lora_A.weight.dtype))
+        dropout_x = self.lora_dropout(x).to(self.lora_A.weight.dtype)
         # we set hyper-parameter here: lora_head = 4
         lora_head = 4
         dropout_x_shape = dropout_x.shape 

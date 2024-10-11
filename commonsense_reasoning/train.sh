@@ -1,14 +1,14 @@
 #!/bin/sh
 
-rank=8
-alpha=16
+rank=4
+alpha=8
 gpuid=0
 micro_batch_size=4
 
 model_p_or_n=yahma/llama-7b-hf
 
-model_path=trained_models/mlora-r$rank-a$alpha-3e4-h4
-results_path=results/mlora-r$rank-a$alpha-3e4-h4
+model_path=trained_models/mlora-r$rank-a$alpha-5e4-h4-epoch3
+results_path=results/mlora-r$rank-a$alpha-5e4-h4-epoch3
 
 mkdir -p $model_path
 mkdir -p $results_path
@@ -23,7 +23,7 @@ CUDA_VISIBLE_DEVICES=$gpuid python -u finetune.py \
   --batch_size 16 \
   --micro_batch_size $micro_batch_size \
   --num_epochs 3 \
-  --learning_rate 3e-4 \
+  --learning_rate 5e-4 \
   --cutoff_len 256 \
   --val_set_size 120 \
   --adapter_name lora \

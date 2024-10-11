@@ -6,8 +6,8 @@ gpuid=0
 
 model_p_or_n=yahma/llama-7b-hf
 
-model_path=trained_models/mlora-r$rank-a$alpha-3e4
-results_path=results/mlora-r$rank-a$alpha-3e4
+model_path=trained_models/mlora-r$rank-a$alpha-3e4-h8
+results_path=results/mlora-r$rank-a$alpha-3e4-h8
 
 mkdir -p $model_path
 mkdir -p $results_path
